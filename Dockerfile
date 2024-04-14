@@ -28,22 +28,24 @@ COPY --from=pfant /PFANT/fortran/bin ${PFANT_BIN}
 COPY --from=pfant /PFANT/data ${PFANT_DATA}
 
 # Add PFANT to PATH
-ENV PATH="${PATH}:${PFANT_BIN}"
+ENV PATH="${PATH}:/tmp/PFANT/fortran/bin"
 
 # Install SynSSP and pyfant dependencies
 RUN yum install -y amazon-linux-extras git mesa-libGL
 RUN PYTHON=python2 amazon-linux-extras install R4 -y
 
 # Install pyfant
-COPY requirements.txt ${LAMBDA_TASK_ROOT}
+COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Install SynSSP
 RUN git clone --depth 1 https://github.com/marinatrevisan/SynSSP_PFANTnew
-RUN cd SynSSP_PFANTnew && link.py --yes
+
+# Copy R Script
+COPY call_synssp.R ./SynSSP_PFANTnew
 
 # Copy Handler to Lambda
-COPY lambda_function.py ${LAMBDA_TASK_ROOT}
+COPY lambda_function.py .
 
 # Run Handler
 CMD ["lambda_function.handler"]
